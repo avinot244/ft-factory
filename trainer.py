@@ -40,3 +40,7 @@ def trainer(model : LlamaForCausalLM, tokenizer : PreTrainedTokenizerFast, datas
         )
         
     )
+    
+    trainer_stats = trainer.train()
+    print(type(trainer_stats))
+    return trainer_stats
