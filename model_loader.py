@@ -11,14 +11,13 @@ def get_model_and_tokenizer() -> tuple[LlamaForCausalLM, PreTrainedTokenizerFast
     model : LlamaForCausalLM
     tokenizer : PreTrainedTokenizerFast
     model, tokenizer = FastLanguageModel.from_pretrained(
-        model_name = "unsloth/llama-3-8b-bnb-4bit",
+        model_name = MODEL_NAME,
         max_seq_length = MAX_SEQ_LENGTH,
         dtype = DTYPE,
         load_in_4bit = LOAD_IN_4BIT,
         token = get_hf_token("read")
     )
 
-    print(type(model), type(tokenizer))
     return model, tokenizer
 
 # print("GET ASOCIATED LORA MODEL")
