@@ -13,6 +13,6 @@ def data_loader(tokenizer : PreTrainedTokenizerFast) -> Dataset:
         return { "text" : [example + EOS_TOKEN for example in examples["text"]] }
     
     dataset = dataset.map(formatting_prompts_func, batched=True)
-    print(type(dataset))
+    return dataset
     
     
