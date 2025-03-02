@@ -1,2 +1,5 @@
 env/*
 tokens/*
+unsloth_compiled_cache/*
+
+*.pyc
