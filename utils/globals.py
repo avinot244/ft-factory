@@ -1,6 +1,7 @@
 HF_TOKEN_PATH = "./tokens/hf_tokens.json"
 
-MODEL_NAME = "unsloth/llama-3-8b-bnb-4bit"
+MODEL_NAME_HF = "meta-llama/Llama-3.2-1B"
+MODEL_NAME_US = "unsloth/llama-3-8b-bnb-4bit"
 MAX_SEQ_LENGTH = 2048
 DTYPE = None
 LOAD_IN_4BIT = True
