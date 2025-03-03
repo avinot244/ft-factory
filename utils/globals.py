@@ -1,10 +1,13 @@
 HF_TOKEN_PATH = "./tokens/hf_tokens.json"
 
-MODEL_NAME_HF = "meta-llama/Llama-3.2-1B"
+MODEL_NAME_HF = "meta-llama/Llama-3.2-3B"
 MODEL_NAME_US = "unsloth/llama-3-8b-bnb-4bit"
+
 MAX_SEQ_LENGTH = 2048
 DTYPE = None
 LOAD_IN_4BIT = True
+BLOCK_SIZE = 512
+
 FOURBIT_MODELS = [
     "unsloth/mistral-7b-v0.3-bnb-4bit",      # New Mistral v3 2x faster!
     "unsloth/mistral-7b-instruct-v0.3-bnb-4bit",
