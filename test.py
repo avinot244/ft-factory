@@ -17,6 +17,6 @@ def generate_text(prompt, max_length=512):
     outputs = model.generate(**inputs, max_length=max_length)
     return tokenizer.decode(outputs[0], skip_special_tokens=True)
 
-user_input = "Nautilus is a great champion for "
+user_input = "Nautilus Q is"
 response = generate_text(user_input)
 print(response)

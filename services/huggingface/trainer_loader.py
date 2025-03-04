@@ -12,7 +12,8 @@ def trainer_hf(
     model : Union[PeftModelForCausalLM, AutoModelForCausalLM],
     tokenizer : PreTrainedTokenizerFast,
     dataset_train : Dataset, 
-    dataset_validation : Dataset
+    dataset_validation : Dataset,
+    ft_mode : str
 ) -> Trainer:
     tokenizer.pad_token = tokenizer.eos_token
     data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False, return_tensors="pt")
@@ -20,7 +21,7 @@ def trainer_hf(
     
     
     trainings_args = TrainingArguments(
-        output_dir=f"./results/Lo{MODEL_NAME_HF.split("/")[1]}/",
+        output_dir=f"./results/Lo{MODEL_NAME_HF.split("/")[1]}-{ft_mode}/",
         eval_strategy="epoch",
         learning_rate=2e-5,
         num_train_epochs=EPOCHS,
