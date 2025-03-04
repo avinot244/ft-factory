@@ -15,8 +15,10 @@ def trainer_hf(
     tokenizer.pad_token = tokenizer.eos_token
     data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False, return_tensors="pt")
     
+    
+    
     trainings_args = TrainingArguments(
-        output_dir=f"./results/{MODEL_NAME_HF}",
+        output_dir=f"./results/Lo{MODEL_NAME_HF.split("/")[1]}/",
         eval_strategy="epoch",
         learning_rate=2e-5,
         num_train_epochs=3,
