@@ -1,13 +1,15 @@
-from transformers import TrainingArguments, Trainer, DataCollatorForLanguageModeling
+from transformers import TrainingArguments, Trainer, DataCollatorForLanguageModeling, AutoModelForCausalLM
 from transformers.tokenization_utils_fast import PreTrainedTokenizerFast
 from datasets.arrow_dataset import Dataset
 from peft.peft_model import PeftModelForCausalLM
+
+from typing import Union
 
 from utils.globals import *
 from utils.token_manager import get_hf_token
 
 def trainer_hf(
-    model : PeftModelForCausalLM,
+    model : Union[PeftModelForCausalLM, AutoModelForCausalLM],
     tokenizer : PreTrainedTokenizerFast,
     dataset_train : Dataset, 
     dataset_validation : Dataset
@@ -21,7 +23,7 @@ def trainer_hf(
         output_dir=f"./results/Lo{MODEL_NAME_HF.split("/")[1]}/",
         eval_strategy="epoch",
         learning_rate=2e-5,
-        num_train_epochs=3,
+        num_train_epochs=EPOCHS,
         weight_decay=0.01,
         push_to_hub=True,
         hub_token=get_hf_token("write"),
