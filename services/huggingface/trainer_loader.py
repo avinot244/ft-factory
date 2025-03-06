@@ -21,7 +21,7 @@ def trainer_hf(
     
     
     trainings_args = TrainingArguments(
-        output_dir=f"./results/Lo{MODEL_NAME_HF.split("/")[1]}-{ft_mode}/",
+        output_dir=f"./results/eli5-llama3-2-1B-{ft_mode}/",
         eval_strategy="epoch",
         learning_rate=2e-5,
         num_train_epochs=EPOCHS,
