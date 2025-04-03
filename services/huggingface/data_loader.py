@@ -2,12 +2,13 @@ from datasets import load_dataset
 from transformers.tokenization_utils_fast import PreTrainedTokenizerFast
 from datasets.arrow_dataset import Dataset
 from typing import Literal
+from utils.token_manager import get_hf_token
 
 from utils.globals import BLOCK_SIZE
 
 def data_loader(tokenizer : PreTrainedTokenizerFast, split : Literal["train", "validation"]) -> Dataset:
     
-    ds = load_dataset("avinot/LoL-Champion-Corpus-v2", split=split)
+    ds = load_dataset("avinot/LoL-Corpus", split=split, token=get_hf_token("read"))
     ds = ds.flatten()
     
     # First we tokenize the dataset
