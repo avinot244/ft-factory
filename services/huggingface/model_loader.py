@@ -31,4 +31,7 @@ def get_model_and_tokenizer_hf(ft_type : Literal["classic", "lora"]) -> tuple[Pe
         # Enable gradient checkpointing to save memory
         model.gradient_checkpointing_enable()
         model = get_peft_model(model, lora_config)
+    
+    if ft_type == "classic":
+        model = AutoModelForCausalLM.from_pretrained(MODEL_NAME_HF)
     return model, tokenizer

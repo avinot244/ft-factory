@@ -9,11 +9,11 @@ from utils.globals import *
 from utils.token_manager import get_hf_token
 
 def trainer_hf(
+    model_name : str,
     model : Union[PeftModelForCausalLM, AutoModelForCausalLM],
     tokenizer : PreTrainedTokenizerFast,
     dataset_train : Dataset, 
     dataset_validation : Dataset,
-    ft_mode : str
 ) -> Trainer:
     tokenizer.pad_token = tokenizer.eos_token
     data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False, return_tensors="pt")
@@ -21,7 +21,7 @@ def trainer_hf(
     
     
     trainings_args = TrainingArguments(
-        output_dir=f"./results/eli5-llama3.2-1B-{ft_mode}/",
+        output_dir=f"./results/{model_name}",
         eval_strategy="epoch",
         learning_rate=2e-5,
         num_train_epochs=EPOCHS,
