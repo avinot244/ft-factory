@@ -8,7 +8,7 @@ MAX_SEQ_LENGTH = 2048
 DTYPE = None
 LOAD_IN_4BIT = True
 BLOCK_SIZE = 128
-EPOCHS = 50
+EPOCHS = 10
 
 FOURBIT_MODELS = [
     "unsloth/mistral-7b-v0.3-bnb-4bit",      # New Mistral v3 2x faster!
