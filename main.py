@@ -14,7 +14,7 @@ def main():
     # trainer = trainer_hf(model_name, model, tokenizer, dataset["train"], dataset["test"])
     trainer = trainer_hf(model_name, model, tokenizer, dataset_train, dataset_validation)
     trainer.train()
-    # trainer.push_to_hub()
+    trainer.push_to_hub()
     
 
 if __name__ == "__main__":
