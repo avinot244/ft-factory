@@ -4,7 +4,7 @@ from services.huggingface.trainer_loader import trainer_hf
 from utils.globals import EPOCHS
 
 def main():
-    for epochs in [5, 10, 20, 30, 40, 50]:
+    for epochs in [40, 50]:
         ft_mode = "lora"
         model, tokenizer = get_model_and_tokenizer_hf("lora")
         dataset_train = data_loader(tokenizer, "train")
@@ -13,7 +13,7 @@ def main():
         model_name = f"LoLlama3.2-1B-{ft_mode}-{epochs}ep"
         
         # trainer = trainer_hf(model_name, model, tokenizer, dataset["train"], dataset["test"])
-        trainer = trainer_hf(model_name, model, tokenizer, dataset_train, dataset_validation)
+        trainer = trainer_hf(model_name, model, tokenizer, dataset_train, dataset_validation, epochs)
         trainer.train()
         trainer.push_to_hub()
     

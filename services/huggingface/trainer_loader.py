@@ -14,6 +14,7 @@ def trainer_hf(
     tokenizer : PreTrainedTokenizerFast,
     dataset_train : Dataset, 
     dataset_validation : Dataset,
+    epochs : int = EPOCHS
 ) -> Trainer:
     tokenizer.pad_token = tokenizer.eos_token
     data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False, return_tensors="pt")
@@ -24,7 +25,7 @@ def trainer_hf(
         output_dir=f"./results/{model_name}",
         eval_strategy="epoch",
         learning_rate=2e-5,
-        num_train_epochs=EPOCHS,
+        num_train_epochs=epochs,
         weight_decay=0.01,
         push_to_hub=True,
         hub_token=get_hf_token("write"),
