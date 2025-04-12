@@ -7,7 +7,7 @@ huggingface_hub.login(token=get_hf_token("read"))
 
 base_model = AutoModelForCausalLM.from_pretrained("meta-llama/Llama-3.2-1B")
 # model = AutoModelForCausalLM.from_pretrained("meta-llama/Llama-3.2-1B")
-model = PeftModel.from_pretrained(base_model, "avinot/Lollama3.2-1B-lora-30ep")
+model = PeftModel.from_pretrained(base_model, "avinot/Lollama3.2-1B-lora-70ep")
 
 # Load the tokenizer
 tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-3.2-1B")
