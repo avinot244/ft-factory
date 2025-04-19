@@ -5,8 +5,8 @@ from utils.globals import EPOCHS
 
 def main():
     for epochs in [50]:
-        ft_mode = "lora"
-        model, tokenizer = get_model_and_tokenizer_hf("lora")
+        ft_mode = "classic"
+        model, tokenizer = get_model_and_tokenizer_hf(ft_mode)
         dataset_train = data_loader(tokenizer, "train")
         # dataset = data_loader_eli5(tokenizer)
         dataset_validation = data_loader(tokenizer, "validation")

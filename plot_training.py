@@ -50,5 +50,5 @@ def plot_training_history(model : str, history : list):
 
     
 
-history = load_history_from_model("results/LoLlama3.2-1B-lora-70ep")
-plot_training_history("LoLlama3.2-1B-lora-70ep", history)
+history = load_history_from_model("results/LoLlama3.2-1B-lora-50ep-v2")
+plot_training_history("LoLlama3.2-1B-lora-50ep-v2", history)
