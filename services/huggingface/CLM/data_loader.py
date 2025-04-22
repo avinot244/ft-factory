@@ -13,7 +13,7 @@ def data_loader(tokenizer : PreTrainedTokenizerFast, split : Literal["train", "v
     
     # First we tokenize the dataset
     def preprocess_function(examples):
-        return tokenizer(["".join(x) for x in examples["text"]])
+        return tokenizer(["".join(x.lower()) for x in examples["text"]])
     
     tokenized_ds = ds.map(
         preprocess_function,

@@ -18,6 +18,6 @@ def generate_text(prompt, max_length=200):
     outputs = model.generate(**inputs, max_length=max_length, top_k=50, top_p=0.95)
     return tokenizer.decode(outputs[0], skip_special_tokens=True)
 
-user_input = "What does the ability \"Dark Passage\" do in Thresh's kit ?"
+user_input = "In which champion class does the champion 'Thresh' belong to ?"
 response = generate_text(user_input)
 print(response)
