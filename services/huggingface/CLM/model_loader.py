@@ -9,7 +9,7 @@ import huggingface_hub
 from typing import Literal
 
 
-def get_model_and_tokenizer_hf(ft_type : Literal["classic", "lora"]) -> tuple[PeftModelForCausalLM, PreTrainedTokenizerFast]:
+def get_model_and_tokenizer_CLM(ft_type : Literal["classic", "lora"]) -> tuple[PeftModelForCausalLM, PreTrainedTokenizerFast]:
     huggingface_hub.login(token=get_hf_token("read"))
     model : AutoModelForCausalLM
     tokenizer : PreTrainedTokenizerFast

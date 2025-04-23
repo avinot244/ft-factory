@@ -6,7 +6,7 @@ from utils.token_manager import get_hf_token
 
 from utils.globals import BLOCK_SIZE
 
-def data_loader(tokenizer : PreTrainedTokenizerFast, split : Literal["train", "validation"]) -> Dataset:
+def data_loader_CLM(tokenizer : PreTrainedTokenizerFast, split : Literal["train", "validation"]) -> Dataset:
     
     ds = load_dataset("avinot/LoL-Corpus-v4", split=split, token=get_hf_token("read"))
     ds = ds.flatten()

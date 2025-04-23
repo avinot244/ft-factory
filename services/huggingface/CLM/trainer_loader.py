@@ -8,7 +8,7 @@ from typing import Union
 from utils.globals import *
 from utils.token_manager import get_hf_token
 
-def trainer_hf(
+def trainer_CLM(
     model_name : str,
     model : Union[PeftModelForCausalLM, AutoModelForCausalLM],
     tokenizer : PreTrainedTokenizerFast,

@@ -8,7 +8,7 @@ from typing import Union
 from utils.globals import *
 from utils.token_manager import get_hf_token
 
-def trainer_hf(
+def trainer_MLM(
     model_name : str,
     model : AutoModelForCausalLM,
     tokenizer : PreTrainedTokenizerFast,
@@ -28,6 +28,11 @@ def trainer_hf(
         weight_decay=0.01,
         push_to_hub=True,
         hub_token=get_hf_token("write"),
+        per_device_train_batch_size=2,  # Reduce batch size to save memory
+        per_device_eval_batch_size=2,
+        fp16=True,  # Enable mixed precision training
+        gradient_accumulation_steps=4  # Accumulate gradients to simulate larger batch
+        
     )
     
     trainer = Trainer(
