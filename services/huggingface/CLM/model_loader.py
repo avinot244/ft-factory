@@ -21,10 +21,10 @@ def get_model_and_tokenizer_CLM(ft_type : Literal["classic", "lora"]) -> tuple[P
     
     if ft_type == "lora":
         lora_config = LoraConfig(
-            r = 128,
-            lora_alpha=32,
-            target_modules = ["q_proj", "k_proj", "v_proj", "o_proj"],
-            # target_modules = ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "down_proj", "up_proj"],
+            r = 32,
+            lora_alpha=64,
+            # target_modules = ["q_proj", "k_proj", "v_proj", "o_proj"],
+            target_modules = ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "down_proj", "up_proj"],
             lora_dropout=0.05,
             bias="none",
             task_type=TaskType.CAUSAL_LM
