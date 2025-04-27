@@ -24,7 +24,7 @@ def trainer_CLM(
     trainings_args = TrainingArguments(
         output_dir=f"./results/{model_name}",
         eval_strategy="epoch",
-        learning_rate=2e-4,
+        learning_rate=1e-5,
         num_train_epochs=epochs,
         weight_decay=0.01,
         push_to_hub=True,
