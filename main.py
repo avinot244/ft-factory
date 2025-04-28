@@ -11,7 +11,7 @@ import os
 os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
 
 def main():
-    for epochs in [5, 6, 7]:
+    for epochs in [3]:
         ft_mode = "lora"
         model, tokenizer = get_model_and_tokenizer_CLM(ft_mode)
         dataset_train = data_loader_CLM(tokenizer, "train")

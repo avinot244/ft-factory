@@ -49,6 +49,6 @@ def plot_training_history(model : str, history : list):
     plt.savefig(f"training_loss-{model}.png")
 
     
-model = "LoLlama3.2-1B-lora-5ep-v3"
+model = "LoLlama3.2-1B-lora-3ep-v3"
 history = load_history_from_model(f"results/{model}")
 plot_training_history(model, history)

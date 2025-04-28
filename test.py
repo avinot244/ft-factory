@@ -7,7 +7,7 @@ huggingface_hub.login(token=get_hf_token("read"))
 
 base_model = AutoModelForCausalLM.from_pretrained("meta-llama/Llama-3.2-1B")
 # model = AutoModelForCausalLM.from_pretrained("meta-llama/Llama-3.2-1B")
-model = PeftModel.from_pretrained(base_model, "avinot/Lollama3.2-1B-lora-7ep-v3")
+model = PeftModel.from_pretrained(base_model, "avinot/Lollama3.2-1B-lora-3ep-v3")
 
 # Load the tokenizer
 tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-3.2-1B")
@@ -19,6 +19,6 @@ def generate_text(prompt, max_length=200):
     return tokenizer.decode(outputs[0], skip_special_tokens=True)
 
 # user_input = "In which champion class does the champion 'Thresh' belong to ?"
-user_input = "Thresh is a support champion who can be"
-response = generate_text(user_input)
+user_input = "Thresh is a support champion. His primary role is:"
+response = generate_text(user_input.lower())
 print(response)
