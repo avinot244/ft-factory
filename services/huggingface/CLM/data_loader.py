@@ -8,7 +8,7 @@ from utils.globals import BLOCK_SIZE
 
 def data_loader_CLM(tokenizer : PreTrainedTokenizerFast, split : Literal["train", "validation"]) -> Dataset:
     
-    ds = load_dataset("avinot/LoL-Corpus-v4", split=split, token=get_hf_token("read"))
+    ds = load_dataset("avinot/LoL-Corpus-v5", split=split, token=get_hf_token("read"))
     ds = ds.flatten()
     
     # First we tokenize the dataset
