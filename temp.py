@@ -76,7 +76,6 @@ training_args = SFTConfig(
     evaluation_strategy="steps",
     eval_steps=50, # Evaluate every 50 steps (adjust as needed)
     save_steps=50, # Save checkpoint every 50 steps (adjust as needed)
-    save_total_limit=3, # Limit the number of saved checkpoints
     load_best_model_at_end=True, # Load the best model based on eval_loss at the end
     metric_for_best_model="eval_loss",
     greater_is_better=False,
@@ -94,7 +93,7 @@ trainer = SFTTrainer(
 )
 
 print("Starting full instruction fine-tuning of base model...")
-trainer.train()
+trainer.train(resume_from_checkpoint = True)
 print("Training finished.")
 
 # Save the fully fine-tuned model
