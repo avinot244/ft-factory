@@ -107,8 +107,62 @@ And the tokenizer here is the tokenizer from the llama3.2:1B **instruct** model 
 In the attached file you will see respectively the evolution of loss and average token accuracy from the fine-tuned model and the base model. From what I can observe is that the fine-tuned model learns and perform way better than the llama3.2:1B model at the beginning of the training which strongly validates the fact that the previous training actually worked.
 Please note that this model is still under training and I didn't do any "proper" evaluation benchmarks.
 
+Here are some samples of interactions that I had with this instruct model :
+```markdown
+**Question :**
+What positioning strategies should players use against Gragas's Body Slam?
+
+**Answer :**
+Players should:
+
+- Maintain distance when Gragas attempts Body Slam
+- Use terrain and choke points to limit his engagement
+- Avoid direct confrontations that enable his all-in potential
+- Prevent him from isolating and eliminating targets
+- Coordinate team positioning to neutralize his engage potential
+
+**Key Insight**: Proper positioning can significantly reduce Gragas's ability to initiate and control team fights.
+
+---
+
+**Question :**
+Explore the theoretical maximum defensive potential of Sterak's Gage when combined with champions possessing inherent health-scaling or shield-amplifying abilities, detailing complex interaction mechanics.
+
+**Answer :**
+Theoretical Maximum Sterak's Gage Interaction:
+
+1. Champion Health Scaling Mechanics:
+- Champions like Malphite, Leona, Nautilus
+- Ability to generate shield-based health pools
+- Potential for exponential defensive scaling
+
+2. Shield Amplification Interactions:
+- Champions with inherent shield generation
+- Potential for multi-layered defensive scaling
+- Revealing complex defensive optimization strategies
+
+3. Theoretical Maximum Potential:
+- 100% shield amplification
+- 100% health scaling
+- Potential for 100-200% defensive transformation
+
+4. Complex Interaction Scenarios:
+- Champions with hybrid shield/heal mechanics
+- Potential for precise defensive optimization
+- Revealing advanced mechanical skill levels
+
+Theoretical maximum Sterak's Gage represents a pinnacle of defensive design, capable of dramatically shifting traditional defensive scaling paradigms. It represents a higher order of defensive design, transcending simple statistical optimization. The item's true value lies not just in raw defensive stats, but in its ability to fundamentally reshape how defensive capabilities are perceived and exploited in team compositions.
+
+```
+
+As you can see the model is behaving quite well but lacks deep knowledge, it's only "on the surface" reasoning
+
+# Benchmarking on champion embedding
+In order to assess if these 2 previous training step where efficient I generated a dataset (available here : [avinot/Champion-Similarity](https://huggingface.co/datasets/avinot/Champion-Similarity)) of champion triplets where the anchor and positive are champions that share a the same role and class and the negative doesn't share a role and class with the anchor. But comparing the cosine similarities of the embedding using the last embedding layer of the instruct tuned model, I only had a 0.5 of accuracy (good prediction = cos_sim(anchor, positive) > cos_sim(anchor, negative))
+
+I also did a top_k_retrieval where I get for every champion the k nearest champions based on the cosine similarity of their embedding, but still the results weren't that great.
+
 # Follow-up plan (to be refined)
-After a session of brainstorming with an AI assistant I came up with the following plan : 
-1. Extract the embedding layers of the decoder just before the prediction head.
-2. Fine-tune the embedding layers on a triplet dataset (anchor, positive, negative) where the anchor and positive are both champions name that play the same role (Toplane, Jungle, Midlane, ADC or Support) or have the same class (Marksman, Assassin, Juggernaut, Warder, ...) and the negative is a champion that doesn't have a similar class and/or role with the anchor. This final training is inspired by the way that "traditional" sentence-transformers models are trained. The goal here is to build an embedding model solely for the champion names in order to build a draft analysis tool. I was also thinking of building synthetic vectors representing caracteristic of champions using my knowledge. Train model on it then generate another set of triplet using cosine-similarity shenanigans
+1. Extract the embedding layers of the decoder just before the prediction head by eaither doing mean pooling of the last k attention layer or taking the output of the last attention layer.
+2. Fine-tune the embedding layers of the instruct-tuned model on the triplet dataset available here : [avinot/Champion-Similarity](https://huggingface.co/datasets/avinot/Champion-Similarity). This final training is inspired by the way that "traditional" sentence-transformers models are trained. The goal here is to build an embedding model solely for the champion names in order to build a draft analysis tool. I was also thinking of building synthetic vectors representing caracteristic of champions using my knowledge. Train model on it then generate another set of triplet using cosine-similarity shenanigans
 3. Benchmark the embedding model. (Clustering, PCA visualisation and so on...)
