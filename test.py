@@ -1,39 +1,27 @@
-# from peft import PeftModel
-# from transformers import AutoModelForCausalLM, AutoTokenizer
-# import huggingface_hub
-# from utils.token_manager import get_hf_token
-
-# huggingface_hub.login(token=get_hf_token("read"))
-
-# base_model = AutoModelForCausalLM.from_pretrained("meta-llama/Llama-3.2-1B")
-# # model = AutoModelForCausalLM.from_pretrained("meta-llama/Llama-3.2-1B")
-# model = PeftModel.from_pretrained(base_model, "avinot/Lollama3.2-1B-lora-3ep-v3")
-
-# # Load the tokenizer
-# tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-3.2-1B")
-
-# # Function to generate text
-# def generate_text(prompt, max_length=200):
-#     inputs = tokenizer(prompt, return_tensors="pt")
-#     outputs = model.generate(**inputs, max_length=max_length, top_k=50, top_p=0.95)
-#     return tokenizer.decode(outputs[0], skip_special_tokens=True)
-
-# # user_input = "In which champion class does the champion 'Thresh' belong to ?"
-# user_input = "You are a League of Legends expert. Your role is to answer to the best of your abilities some questions about league of legends\nThresh first ability is..."
-# response = generate_text(user_input.lower())
-# print(response)
-
-from peft import PeftModel
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoTokenizer, AutoModelForCausalLM
 import torch
 
-base_model = AutoModelForCausalLM.from_pretrained("meta-llama/Llama-3.2-1B", torch_dtype=torch.float16)
-tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-3.2-1B-instruct")
-tokenizer.pad_token = tokenizer.eos_token
-model = PeftModel.from_pretrained(base_model, "avinot/Lollama3.2-1B-lora-3ep-v3")
-model = model.merge_and_unload()  # <<< Important line
+from utils.token_manager import get_hf_token
+from services.huggingface.contrastive.model_loader import PredictionHead
 
-prompt = "What is the role of the champion Thresh ?"
-inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
-outputs = model.generate(**inputs, max_length=50, do_sample=False)
-print(tokenizer.decode(outputs[0], skip_special_tokens=True))
+model = PredictionHead(input_dim=2048, output_dim=2048)
+# total_params = 2048*2048 + 2048 = 4196352
+
+
+# Generating embedding for a champion
+anchor : str = "Thresh"
+positive : str = "Blitzcrank"
+negative : str = "Talon"
+
+
+me_anchor = model(anchor)
+me_positive = model(positive)
+me_negative = model(negative)
+
+# Computing the loss
+loss_fn = torch.nn.TripletMarginLoss(margin=0.1, p=2)
+d_ap = torch.dist(me_anchor, me_positive, p=2)
+d_an = torch.dist(me_anchor, me_negative, p=2)
+print(f"Anchor-Positive distance: {d_ap.item():.4f}")
+print(f"Anchor-Negative distance: {d_an.item():.4f}")
+print(f"Margin: 0.1, Loss: {max(d_ap - d_an + 0.1, torch.tensor(0.0))}")
