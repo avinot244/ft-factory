@@ -7,7 +7,8 @@ class ContrastiveTrainingArgs(BaseModel):
     output_dir: str
     logging_path: str
     epochs: int=10
-    batch_size: int=10
+    train_batch_size: int=10,
+    eval_batch_size: int=10,
     learning_rate: float=0.001
     logging_steps: int=100
     save_steps: int=500

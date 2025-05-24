@@ -14,13 +14,14 @@ def main():
     
     training_args = ContrastiveTrainingArgs(
         output_dir="output/",
-        logging_path="logs/training_log.json",
+        logging_path="logs/training_log.jsonl",
         epochs=3,
-        batch_size=10,
+        train_batch_size=16,
+        eval_batch_size=16,
         learning_rate=0.001,
-        logging_steps=100,
-        save_steps=500,
-        eval_steps=500,
+        logging_steps=50,
+        save_steps=4000,
+        eval_steps=1000,
         max_grad_norm=1.0,
         margin=0.1,
         p=2
