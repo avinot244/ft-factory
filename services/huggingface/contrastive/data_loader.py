@@ -8,6 +8,18 @@ import torch
 from utils.token_manager import get_hf_token
 
 class TripletDataset(Dataset):
-    def __init__(self, split : Literal["train", "validation"], tokenizer : AutoTokenizer):
+    def __init__(self, split : Literal["train", "validation"]):
         dataframe = pd.DataFrame(load_dataset("avinot/Champion-Similarity", token=get_hf_token("read"), split=split))
-        self.tokenizer = tokenizer
+        self.anchor = dataframe["anchor"].to_numpy()
+        self.positive = dataframe["positive"].to_numpy()
+        self.negative = dataframe["negative"].to_numpy()
+
+    def __len__(self):
+        return len(self.anchor)
+    
+    def __getitem__(self, idx):
+        return (
+            self.anchor[idx],
+            self.positive[idx],
+            self.negative[idx]
+        )

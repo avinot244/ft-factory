@@ -1,42 +1,38 @@
-from services.huggingface.CLM.model_loader import get_model_and_tokenizer_CLM
-from services.huggingface.CLM.data_loader import data_loader_CLM, data_loader_eli5
-from services.huggingface.CLM.trainer_loader import trainer_CLM
-
-from services.huggingface.MLM.model_loader import get_model_and_tokenizer_MLM
-from services.huggingface.MLM.data_loader import data_loader_MLM
-from services.huggingface.MLM.trainer_loader import trainer_MLM
-from utils.globals import EPOCHS
-from utils.token_manager import get_hf_token
+import torch
+from services.huggingface.contrastive.model_loader import PredictionHead
+from services.huggingface.contrastive.data_loader import TripletDataset
+from services.huggingface.contrastive.trainer_loader import train
+from utils.types.TrainingArgs import ContrastiveTrainingArgs
 import os
 os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
 
 def main():
-    for epochs in [3]:
-        ft_mode = "lora"
-        model, tokenizer = get_model_and_tokenizer_CLM(ft_mode)
-        dataset_train = data_loader_CLM(tokenizer, "train")
-        # dataset = data_loader_eli5(tokenizer)
-        dataset_validation = data_loader_CLM(tokenizer, "validation")
-        model_name = f"LoLlama3.2-1B-{ft_mode}-{epochs}ep-v3"
-        
-        # trainer = trainer_hf(model_name, model, tokenizer, dataset["train"], dataset["test"])
-        trainer = trainer_CLM(model_name, model, tokenizer, dataset_train, dataset_validation, epochs)
-        trainer.train()
-        trainer.push_to_hub()
+    model = PredictionHead(input_dim=2048, output_dim=2048)
+
+    dataset_train = TripletDataset(split="train")
+    dataset_validation = TripletDataset(split="validation")
     
+    training_args = ContrastiveTrainingArgs(
+        output_dir="output/",
+        logging_path="logs/training_log.json",
+        epochs=3,
+        batch_size=10,
+        learning_rate=0.001,
+        logging_steps=100,
+        save_steps=500,
+        eval_steps=500,
+        max_grad_norm=1.0,
+        margin=0.1,
+        p=2
+    )
     
-    # for epochs in [2]:
-    #     model, tokenizer = get_model_and_tokenizer_MLM("distilroberta-base")
-    #     dataset_train = data_loader_MLM(tokenizer, "train")
-    #     # dataset = data_loader_eli5(tokenizer)
-    #     dataset_validation = data_loader_MLM(tokenizer, "validation")
-    #     model_name = f"distilolroberta-MLM-{epochs}ep-v2"
-        
-    #     # trainer = trainer_hf(model_name, model, tokenizer, dataset["train"], dataset["test"])
-    #     trainer = trainer_MLM(model_name, model, tokenizer, dataset_train, dataset_validation, epochs)
-    #     trainer.train()
-    #     trainer.push_to_hub()
-    #     tokenizer.push_to_hub(f"{model_name}-tok", token=get_hf_token("write"))
+    train(
+        model,
+        optimizer=torch.optim.Adam(model.parameters(), lr=training_args.learning_rate),
+        dataset_train=dataset_train,
+        dataset_validation=dataset_validation,
+        training_args=training_args
+    )
     
 
 if __name__ == "__main__":
