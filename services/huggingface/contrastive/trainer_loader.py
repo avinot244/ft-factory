@@ -44,8 +44,7 @@ def train(
                 torch.save(model.state_dict(), f"{training_args.output_dir}model_epoch_{epoch+1}_step_{step+1}.pth")
                 
             if (epoch + 1)*step % training_args.eval_steps == 0:
-                # Here you would typically evaluate the model on a validation set
-                # For simplicity, we are skipping this part in this example
+                # Evaluating the model on the validation set
                 for (anchor_val, positive_val, negative_val) in dataloader_validation:
                     with torch.no_grad():
                         anchor_embeddings_val = model(anchor_val)
