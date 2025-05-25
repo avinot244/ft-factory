@@ -13,15 +13,14 @@ with open("./logs/training_log.jsonl", "r") as f:
         data : dict = json.loads(line)
         if "loss" in list(data.keys()):
             training_loss.append(data["loss"])
-            steps_training.append(data["epoch"] * data["step"])
+            steps_training.append(data["step"])
         if "validation_loss" in list(data.keys()):
             validation_loss.append(data["validation_loss"])
-            steps_validation.append(data["epoch"] * data["step"])
+            steps_validation.append(data["step"])
     
-    print(steps_training)
     
     plt.plot(steps_training, training_loss, label="Training Loss")
-    plt.plot(steps_validation, validation_loss, label="Validation Loss")
+    plt.plot(steps_validation, validation_loss, "ro", label="Validation Loss")
     plt.xlabel("Steps")
     plt.ylabel("Loss")
     plt.title("Training and Validation Loss Over Steps")

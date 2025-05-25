@@ -27,7 +27,7 @@ class PredictionHead(torch.nn.Module):
         
         self.proj = torch.nn.Sequential(
             torch.nn.Linear(input_dim, output_dim, dtype=dtype),
-            torch.nn.Tanh()
+            torch.nn.Softmax(dim=output_dim)
         ).to(self.device)
 
     def forward(self, input_text : list[str]) -> torch.Tensor:

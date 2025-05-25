@@ -14,10 +14,10 @@ def train(
     training_args : ContrastiveTrainingArgs,
 ):
     loss_fn = torch.nn.TripletMarginLoss(margin=training_args.margin, p=training_args.p)
-    dataloader = DataLoader(dataset_train, batch_size=training_args.batch_size, shuffle=True)
-    dataloader_validation = DataLoader(dataset_validation, batch_size=training_args.batch_size, shuffle=True)
+    dataloader_train = DataLoader(dataset_train, batch_size=training_args.train_batch_size, shuffle=True)
+    dataloader_validation = DataLoader(dataset_validation, batch_size=training_args.eval_batch_size, shuffle=True)
     for epoch in range(training_args.epochs):
-        for (step, (anchor_batch, positive_batch, negative_batch)) in tqdm(enumerate(dataloader), total=len(dataloader)):
+        for (step, (anchor_batch, positive_batch, negative_batch)) in tqdm(enumerate(dataloader_train), total=len(dataloader_train)):
             # Forward pass
             anchor_embeddings = model(anchor_batch)
             positive_embeddings = model(positive_batch)
@@ -32,12 +32,12 @@ def train(
             optimizer.step()
             
             if step % training_args.logging_steps == 0:
-                tqdm.write(f"Epoch {epoch+1}, Step {step+1}, Loss: {cost.item():.4f}")
+                tqdm.write(f"Epoch {epoch}, Step {step}, Loss: {cost.item():.4f}")
                 if not os.path.exists(training_args.logging_path):
                     with open(training_args.logging_path, "w") as log_file:
                         json.dump({
                             "epoch": epoch ,
-                            "step": step*len(dataloader),
+                            "step": step + epoch*len(dataloader_train),
                             "loss": cost.item()
                         }, log_file)
                         log_file.write("\n")
@@ -45,7 +45,7 @@ def train(
                     with open(training_args.logging_path, "a") as log_file:
                         json.dump({
                             "epoch": epoch,
-                            "step": step*len(dataloader),
+                            "step": step + epoch*len(dataloader_train),
                             "loss": cost.item()
                         }, log_file)
                         log_file.write("\n")
@@ -69,7 +69,7 @@ def train(
                 with open(training_args.logging_path, "a") as log_file:
                     json.dump({
                         "epoch": epoch,
-                        "step": step*len(dataloader),
+                        "step": step + epoch*len(dataloader_train),
                         "validation_loss": val_cost.item()
                     }, log_file)
                     log_file.write("\n")
