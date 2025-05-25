@@ -5,3 +5,4 @@ _unsloth_temporary_saved_buffers/*
 __pycache__/*
 *.pyc
 results/*
+output/*
