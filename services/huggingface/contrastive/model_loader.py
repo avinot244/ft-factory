@@ -25,10 +25,7 @@ class PredictionHead(torch.nn.Module):
         for param in self.backbone.parameters():
             param.requires_grad = False
         
-        self.proj = torch.nn.Sequential(
-            torch.nn.Linear(input_dim, output_dim, dtype=dtype),
-            torch.nn.Softmax(dim=output_dim)
-        ).to(self.device)
+        self.proj = torch.nn.Linear(input_dim, output_dim, dtype=dtype).to(self.device)
 
     def forward(self, input_text : list[str]) -> torch.Tensor:
         inputs = self.tokenizer(input_text, return_tensors="pt", padding=True, truncation=True).to(self.device)
@@ -42,5 +39,9 @@ class PredictionHead(torch.nn.Module):
 
             attention_mask = inputs["attention_mask"].unsqueeze(-1).to(self.device)
             masked_mean = (mean_k_layers * attention_mask).sum(dim=1) / attention_mask.sum(dim=1)
+        
+        # Linear projection and L2 normalization
+        projected = self.proj(masked_mean)
+        normalized = torch.nn.functional.normalize(projected, p=2, dim=1)
             
-        return self.proj(masked_mean)
+        return normalized
