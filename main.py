@@ -17,11 +17,11 @@ def main():
         logging_path="logs/training_log.jsonl",
         epochs=3,
         train_batch_size=16,
-        eval_batch_size=16,
+        eval_batch_size=32,
         learning_rate=0.001,
         logging_steps=50,
         save_steps=5000,
-        eval_steps=1000,
+        eval_steps=200,
         max_grad_norm=1.0,
         margin=0.5,
         p=2
