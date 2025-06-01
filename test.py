@@ -9,9 +9,9 @@ dataset = load_dataset("avinot/Champion-Similarity", split="validation")
 model : PredictionHead = PredictionHead(input_dim=2048, output_dim=2048)
 model.load_state_dict(torch.load("output/model_epoch_1_step_5001.pth", map_location=torch.device('cpu')))
 
-anchor : str = "Lulu"
-positive : str = "Janna"
-negative : str = "Thresh"
+anchor : str = "Karthus"
+positive : str = "Swain"
+negative : str = "Lux"
 
 anchor_embedding : torch.Tensor = model(anchor).detach().cpu().to(torch.float32)
 positive_embedding : torch.Tensor = model(positive).detach().cpu().to(torch.float32)
@@ -19,8 +19,8 @@ negative_embedding : torch.Tensor = model(negative).detach().cpu().to(torch.floa
 
 sim1 = cosine_similarity(anchor_embedding, positive_embedding)
 sim2 = cosine_similarity(anchor_embedding, negative_embedding)
-print(f"Similarity between anchor and positive: {sim1[0][0]}")
-print(f"Similarity between anchor and negative: {sim2[0][0]}")
+print(f"Similarity between {anchor} and {positive}: {sim1[0][0]}")
+print(f"Similarity between {anchor} and {negative}: {sim2[0][0]}")
 
 # good_predictions : int = 0
 # bad_predicitons : int = 0
