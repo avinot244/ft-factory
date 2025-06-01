@@ -104,8 +104,7 @@ trainer = SFTTrainer(
 ```
 And the tokenizer here is the tokenizer from the llama3.2:1B **instruct** model to have the chat template.
 
-In the attached file you will see respectively the evolution of loss and average token accuracy from the fine-tuned model and the base model. From what I can observe is that the fine-tuned model learns and perform way better than the llama3.2:1B model at the beginning of the training which strongly validates the fact that the previous training actually worked.
-Please note that this model is still under training and I didn't do any "proper" evaluation benchmarks.
+When comparing the loss and the mean_token_accuracy when training the base_model and the pre-trained one, I've noticed that the pre-trained one had way better loss stability and performance over few thousands step than the base_model
 
 Here are some samples of interactions that I had with this instruct model :
 ```markdown
@@ -158,11 +157,26 @@ Theoretical maximum Sterak's Gage represents a pinnacle of defensive design, cap
 As you can see the model is behaving quite well but lacks deep knowledge, it's only "on the surface" reasoning
 
 # Benchmarking on champion embedding
-In order to assess if these 2 previous training step where efficient I generated a dataset (available here : [avinot/Champion-Similarity](https://huggingface.co/datasets/avinot/Champion-Similarity)) of champion triplets where the anchor and positive are champions that share a the same role and class and the negative doesn't share a role and class with the anchor. But comparing the cosine similarities of the embedding using the last embedding layer of the instruct tuned model, I only had a 0.5 of accuracy (good prediction = cos_sim(anchor, positive) > cos_sim(anchor, negative))
+In order to assess if these 2 previous training step where efficient I generated a dataset (available here : [avinot/Champion-Similarity](https://huggingface.co/datasets/avinot/Champion-Similarity)) of champion triplets where the anchor and positive are champions that share a the same role and class (and sub-class) and the negative doesn't share a role and class with the anchor. But comparing the cosine similarities of the embedding using the last embedding layer of the instruct tuned model, I only had a 0.5 of accuracy (good prediction = cos_sim(anchor, positive) > cos_sim(anchor, negative)). Also I've taken into account that the same champion could be flexed on different roles/classes. (ex: Gragas can be Top, Jungle, Mid and Support, and could be a burst and Vanguard)
 
 I also did a top_k_retrieval where I get for every champion the k nearest champions based on the cosine similarity of their embedding, but still the results weren't that great.
 
-# Follow-up plan (to be refined)
-1. Extract the embedding layers of the decoder just before the prediction head by eaither doing mean pooling of the last k attention layer or taking the output of the last attention layer.
-2. Fine-tune the embedding layers of the instruct-tuned model on the triplet dataset available here : [avinot/Champion-Similarity](https://huggingface.co/datasets/avinot/Champion-Similarity). This final training is inspired by the way that "traditional" sentence-transformers models are trained. The goal here is to build an embedding model solely for the champion names in order to build a draft analysis tool. I was also thinking of building synthetic vectors representing caracteristic of champions using my knowledge. Train model on it then generate another set of triplet using cosine-similarity shenanigans
-3. Benchmark the embedding model. (Clustering, PCA visualisation and so on...)
+# Extracting embeding layers of decoder and perform contrastive fine-tuning
+After that I've take the mean-pooling of the last 10 hidden layers of my backbone LLM and appended on top of it a linear prediction head. In the process I've frozen the parameters of the backbone LLM (instruct fine-tuned one) and only trained the linear prediction head.
+During training I took the TripletMarginLoss from pytorch. And the prediction head was trained on the previously generated triplet dataset : [avinot/Champion-Similarity](https://huggingface.co/datasets/avinot/Champion-Similarity) that has 236k training triplets and 59k validation triplets.
+The training and validation loss showed a steady mitigation until reaching approximately 0 and not spiking afterward on 3 epochs.
+After that I've benchmarked my embedding model on wether he could accuractly tell if the anchor is closer to the positive than the negative. And it had 100% accuracy on the validation set
+
+However I've tested only fine-tuning a sentence transformer model on the same dataset but on the MultipleRerankingLoss loss function and managed to have similar results.
+
+Here is some overview of the cosine-similarity between champions :
+```
+- Thresh-Lulu : 0.80 (same role different class, not in training or validation set)
+- Thresh-Janna : 0.93 (same role different class, not in training or validation set)
+- Renekton-Aatrox : 0.91 (same role and class, in train set)
+- Renekton-Orianna : 0.16 (not same role and class, in train set)
+```
+
+My intuition is that the dataset is not "complex enough" so that this task requires the representation of the backbone insstruct tuned LLM. For example we could have :
+A : Karthus, P : Swain and N : Lux. This triplets tends to show similarity between sustained AoE dps mages.
+A : Quinn, P : Bard and N : Caitlyn. This triplets shows champions that have roaming capabilities.
