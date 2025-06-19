@@ -20,8 +20,8 @@ def main():
         eval_batch_size=32,
         learning_rate=0.001,
         logging_steps=50,
-        save_steps=5000,
-        eval_steps=200,
+        save_steps=2605,
+        eval_steps=2605,
         max_grad_norm=1.0,
         margin=0.5,
         p=2

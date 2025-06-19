@@ -28,6 +28,15 @@ class PredictionHead(torch.nn.Module):
         self.proj = torch.nn.Linear(input_dim, output_dim, dtype=dtype).to(self.device)
 
     def forward(self, input_text : list[str]) -> torch.Tensor:
+        # Ensure input_text is a list of strings
+        if isinstance(input_text, str):
+            input_text = [input_text]
+        elif isinstance(input_text, (list, tuple)):
+            # Convert any non-string elements to strings
+            input_text = [str(item) for item in input_text]
+        else:
+            input_text = [str(input_text)]
+        
         inputs = self.tokenizer(input_text, return_tensors="pt", padding=True, truncation=True).to(self.device)
         
         with torch.no_grad():

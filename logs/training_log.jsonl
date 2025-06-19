@@ -786,3 +786,5 @@
 {"epoch": 2, "step": 31286, "loss": 0.0}
 {"epoch": 2, "step": 31286, "validation_loss": 0.0}
 {"epoch": 2, "step": 31336, "loss": 0.0}
+{"epoch": 0, "step": 0, "loss": 0.51171875}
+{"epoch": 0, "step": 0, "loss": 0.48828125}
