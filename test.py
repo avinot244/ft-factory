@@ -7,11 +7,11 @@ from datasets import load_dataset
 dataset = load_dataset("avinot/Champion-Similarity", split="validation")
 
 model : PredictionHead = PredictionHead(input_dim=2048, output_dim=2048)
-model.load_state_dict(torch.load("output/model_epoch_1_step_5001.pth", map_location=torch.device('cpu')))
+model.load_state_dict(torch.load("output/model_epoch_2_step_2605.pth", map_location=torch.device('cpu')))
 
-anchor : str = "Karthus"
-positive : str = "Swain"
-negative : str = "Lux"
+anchor : str = """Rell is an aggressive engage support with powerful crowd control and defensive capabilities."""
+positive : str = """Leona is a tanky engage support specialized in initiating fights and controlling the battlefield through crowd control."""
+negative : str = """Lux is a versatile burst mage who excels at controlling team fights from a distance while providing utility to her allies. """
 
 anchor_embedding : torch.Tensor = model(anchor).detach().cpu().to(torch.float32)
 positive_embedding : torch.Tensor = model(positive).detach().cpu().to(torch.float32)
@@ -19,8 +19,8 @@ negative_embedding : torch.Tensor = model(negative).detach().cpu().to(torch.floa
 
 sim1 = cosine_similarity(anchor_embedding, positive_embedding)
 sim2 = cosine_similarity(anchor_embedding, negative_embedding)
-print(f"Similarity between {anchor} and {positive}: {sim1[0][0]}")
-print(f"Similarity between {anchor} and {negative}: {sim2[0][0]}")
+print(f"Similarity between anchor and positive: {sim1[0][0]}")
+print(f"Similarity between anchor and negative: {sim2[0][0]}")
 
 # good_predictions : int = 0
 # bad_predicitons : int = 0
