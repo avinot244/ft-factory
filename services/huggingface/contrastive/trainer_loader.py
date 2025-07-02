@@ -3,8 +3,11 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 import json
 import os
+import torch.nn.functional as F
+from typing import Optional
 
 from utils.types.TrainingArgs import ContrastiveTrainingArgs
+from services.huggingface.contrastive.loss import NCELoss
 
 def train(
     model : torch.nn.Module,
@@ -13,7 +16,8 @@ def train(
     dataset_validation : torch.utils.data.Dataset,
     training_args : ContrastiveTrainingArgs,
 ):
-    loss_fn = torch.nn.TripletMarginLoss(margin=training_args.margin, p=training_args.p)
+    # loss_fn = torch.nn.TripletMarginLoss(margin=training_args.margin, p=training_args.p)
+    loss_fn = NCELoss(temperature=0.2)
     dataloader_train = DataLoader(dataset_train, batch_size=training_args.train_batch_size, shuffle=True)
     dataloader_validation = DataLoader(dataset_validation, batch_size=training_args.eval_batch_size, shuffle=True)
     for epoch in range(training_args.epochs):
@@ -49,7 +53,18 @@ def train(
                             "loss": cost.item()
                         }, log_file)
                         log_file.write("\n")
-            
+            if step % 10 == 0:
+                with torch.no_grad():
+                    cos_sim_pos = F.cosine_similarity(anchor_embeddings, positive_embeddings, dim=1).mean().item()
+                    cos_sim_neg = F.cosine_similarity(anchor_embeddings, negative_embeddings, dim=1).mean().item()
+                    if not(os.path.exists("./temp.csv")):
+                        with open("./temp.csv", "w") as f:
+                            f.write("step,cos_sim_pos,cos_sim_neg\n")
+                            f.write(f"{step},{cos_sim_pos:.4f},{cos_sim_neg:.4f}\n")
+                            
+                    else:
+                        with open("./temp.csv", "a") as f:
+                            f.write(f"{step},{cos_sim_pos:.4f},{cos_sim_neg:.4f}\n")
             
             if step % training_args.save_steps == 0:
                 # Save the model checkpoint

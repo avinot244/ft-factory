@@ -4,7 +4,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from utils.token_manager import get_hf_token
 
 class PredictionHead(torch.nn.Module):
-    def __init__(self, input_dim=2048, output_dim=2048, dtype=torch.bfloat16):
+    def __init__(self, input_dim=2048, proj_dim=512, output_dim=2048, dtype=torch.bfloat16):
         super(PredictionHead, self).__init__()
         if torch.cuda.is_available():
             self.device = torch.device("cuda")
@@ -25,7 +25,12 @@ class PredictionHead(torch.nn.Module):
         for param in self.backbone.parameters():
             param.requires_grad = False
         
-        self.proj = torch.nn.Linear(input_dim, output_dim, dtype=dtype).to(self.device)
+        self.proj = torch.nn.Sequential(
+            torch.nn.Linear(input_dim, proj_dim, dtype=dtype).to(self.device),
+            torch.nn.ReLU(),
+            torch.nn.Dropout(0.1),
+            torch.nn.Linear(proj_dim, output_dim, dtype=dtype).to(self.device),
+        )
 
     def forward(self, input_text : list[str]) -> torch.Tensor:
         # Ensure input_text is a list of strings
