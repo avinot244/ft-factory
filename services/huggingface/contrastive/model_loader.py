@@ -28,7 +28,7 @@ class PredictionHead(torch.nn.Module):
         self.proj = torch.nn.Sequential(
             torch.nn.Linear(input_dim, proj_dim, dtype=dtype).to(self.device),
             torch.nn.ReLU(),
-            torch.nn.Dropout(0.1),
+            torch.nn.Dropout(0.2),
             torch.nn.Linear(proj_dim, output_dim, dtype=dtype).to(self.device),
         )
 

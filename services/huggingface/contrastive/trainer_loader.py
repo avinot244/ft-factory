@@ -9,6 +9,31 @@ from typing import Optional
 from utils.types.TrainingArgs import ContrastiveTrainingArgs
 from services.huggingface.contrastive.loss import NCELoss
 
+def eval_model(
+    dataloader_train : torch.utils.data.DataLoader,
+    dataloader_validation : torch.utils.data.DataLoader,
+    model : torch.nn.Module,
+    loss_fn : NCELoss,
+    training_args : ContrastiveTrainingArgs,
+    epoch : int,
+    step: int,
+):
+    for (anchor_val, positive_val, negative_val) in tqdm(dataloader_validation):
+        with torch.no_grad():
+            anchor_embeddings_val = model(anchor_val)
+            positive_embeddings_val = model(positive_val)
+            negative_embeddings_val = model(negative_val)
+            val_cost = loss_fn(anchor_embeddings_val, positive_embeddings_val, negative_embeddings_val)
+
+    tqdm.write(f"Validation Loss: {val_cost.item():.4f}")
+    with open(training_args.logging_path, "a") as log_file:
+        json.dump({
+            "epoch": epoch,
+            "step": step + epoch*len(dataloader_train),
+            "validation_loss": val_cost.item()
+        }, log_file)
+        log_file.write("\n")
+
 def train(
     model : torch.nn.Module,
     optimizer : torch.optim.Optimizer,
@@ -20,6 +45,7 @@ def train(
     loss_fn = NCELoss(temperature=0.2)
     dataloader_train = DataLoader(dataset_train, batch_size=training_args.train_batch_size, shuffle=True)
     dataloader_validation = DataLoader(dataset_validation, batch_size=training_args.eval_batch_size, shuffle=True)
+    eval_model(dataloader_train, dataloader_validation, model, loss_fn, training_args, 0, 0)
     for epoch in range(training_args.epochs):
         for (step, (anchor_batch, positive_batch, negative_batch)) in tqdm(enumerate(dataloader_train), total=len(dataloader_train)):
             # Forward pass
@@ -73,21 +99,8 @@ def train(
             if step % training_args.eval_steps == 0:
                 # Evaluating the model on the validation set
                 tqdm.write("Evaluating on validation set...")
-                for (anchor_val, positive_val, negative_val) in tqdm(dataloader_validation):
-                    with torch.no_grad():
-                        anchor_embeddings_val = model(anchor_val)
-                        positive_embeddings_val = model(positive_val)
-                        negative_embeddings_val = model(negative_val)
-                        val_cost = loss_fn(anchor_embeddings_val, positive_embeddings_val, negative_embeddings_val)
-
-                tqdm.write(f"Validation Loss: {val_cost.item():.4f}")
-                with open(training_args.logging_path, "a") as log_file:
-                    json.dump({
-                        "epoch": epoch,
-                        "step": step + epoch*len(dataloader_train),
-                        "validation_loss": val_cost.item()
-                    }, log_file)
-                    log_file.write("\n")
+                eval_model(dataloader_train, dataloader_validation, model, loss_fn, training_args, epoch, step)
         
         print(f"Epoch {epoch+1}/{training_args.epochs}, Loss: {cost.item():.4f}")
+        eval_model(dataloader_train, dataloader_validation, model, loss_fn, training_args, epoch+1, step+1)
         torch.save(model.state_dict(), f"{training_args.output_dir}model_epoch_{epoch+1}_step_{step+1}.pth")

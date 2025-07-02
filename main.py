@@ -13,15 +13,15 @@ def main():
     dataset_validation = TripletDataset(split="validation")
     
     training_args = ContrastiveTrainingArgs(
-        output_dir="output/v5/",
-        logging_path="logs/training_log_v5.jsonl",
+        output_dir="output/v6/",
+        logging_path="logs/training_log_v6.jsonl",
         epochs=3,
         train_batch_size=16,
         eval_batch_size=32,
-        learning_rate=3e-4,
-        logging_steps=50,
+        learning_rate=3e-5,
+        logging_steps=10,
         save_steps=269,
-        eval_steps=269,
+        eval_steps=100,
         weight_decay=1e-2,
         margin=0.5,
         p=2
@@ -29,7 +29,7 @@ def main():
     
     train(
         model,
-        optimizer=torch.optim.Adam(model.parameters(), lr=training_args.learning_rate),
+        optimizer=torch.optim.Adam(model.parameters(), lr=training_args.learning_rate, weight_decay=training_args.weight_decay),
         dataset_train=dataset_train,
         dataset_validation=dataset_validation,
         training_args=training_args
