@@ -22,7 +22,7 @@ def main():
         logging_steps=50,
         save_steps=269,
         eval_steps=269,
-        max_grad_norm=1.0,
+        weight_decay=1e-2,
         margin=0.5,
         p=2
     )

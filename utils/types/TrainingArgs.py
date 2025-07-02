@@ -13,7 +13,7 @@ class ContrastiveTrainingArgs(BaseModel):
     logging_steps: int
     save_steps: int
     eval_steps: int
-    max_grad_norm: float
+    weight_decay: float
     epochs: int
     margin: float
     p: int
