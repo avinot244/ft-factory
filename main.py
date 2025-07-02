@@ -18,7 +18,7 @@ def main():
         epochs=3,
         train_batch_size=16,
         eval_batch_size=32,
-        learning_rate=3e-5,
+        learning_rate=1e-4,
         logging_steps=10,
         save_steps=269,
         eval_steps=100,
