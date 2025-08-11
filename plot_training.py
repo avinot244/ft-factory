@@ -2,7 +2,11 @@ import json
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-with open("./logs/training_log_v6.jsonl", "r") as f:
+version : str = "v8"
+log_path : str = f"./logs/training_log_{version}.jsonl"
+out_path : str = f"./output/{version}training_validation_loss"
+
+with open(log_path, "r") as f:
     lines = f.readlines()
     
     validation_loss = []
@@ -25,4 +29,4 @@ with open("./logs/training_log_v6.jsonl", "r") as f:
     plt.xlabel("Steps")
     plt.ylabel("Loss")
     plt.legend()
-    plt.savefig("training_validation_loss.png")
+    plt.savefig(out_path)
