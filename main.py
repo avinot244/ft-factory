@@ -13,18 +13,18 @@ def main():
     dataset_validation = TripletDataset(split="validation")
     
     training_args = ContrastiveTrainingArgs(
-        output_dir="output/v6/",
-        logging_path="logs/training_log_v6.jsonl",
+        output_dir="output/v11/",
+        logging_path="logs/training_log_v11.jsonl",
         epochs=3,
-        train_batch_size=16,
-        eval_batch_size=32,
-        learning_rate=1e-4,
+        train_batch_size=8,
+        eval_batch_size=16,
+        learning_rate=5e-5,
         logging_steps=10,
-        save_steps=269,
-        eval_steps=100,
+        eval_steps=600,
         weight_decay=1e-2,
         margin=0.5,
-        p=2
+        p=2,
+        temperature=0.5
     )
     
     train(

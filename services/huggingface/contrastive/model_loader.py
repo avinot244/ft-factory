@@ -28,7 +28,10 @@ class PredictionHead(torch.nn.Module):
         self.proj = torch.nn.Sequential(
             torch.nn.Linear(input_dim, proj_dim, dtype=dtype).to(self.device),
             torch.nn.ReLU(),
-            torch.nn.Dropout(0.2),
+            # torch.nn.Dropout(0.2),
+            torch.nn.Linear(proj_dim, proj_dim, dtype=dtype).to(self.device),
+            torch.nn.ReLU(),
+            # torch.nn.Dropout(0.2),
             torch.nn.Linear(proj_dim, output_dim, dtype=dtype).to(self.device),
         )
 
@@ -54,8 +57,10 @@ class PredictionHead(torch.nn.Module):
             attention_mask = inputs["attention_mask"].unsqueeze(-1).to(self.device)
             masked_mean = (mean_k_layers * attention_mask).sum(dim=1) / attention_mask.sum(dim=1)
         
-        # Linear projection and L2 normalization
+        # Linear projection
         projected = self.proj(masked_mean)
-        normalized = torch.nn.functional.normalize(projected, p=2, dim=1)
+        
+        # Add and L2 normalization
+        normalized = torch.nn.functional.normalize((projected + masked_mean), p=2, dim=1)
             
         return normalized

@@ -23,7 +23,14 @@ def eval_model(
             anchor_embeddings_val = model(anchor_val)
             positive_embeddings_val = model(positive_val)
             negative_embeddings_val = model(negative_val)
-            val_cost = loss_fn(anchor_embeddings_val, positive_embeddings_val, negative_embeddings_val)
+            
+            triplet_loss = torch.nn.functional.relu(
+                F.pairwise_distance(anchor_embeddings_val, positive_embeddings_val, p=training_args.p) -
+                F.pairwise_distance(anchor_embeddings_val, negative_embeddings_val, p=training_args.p) +
+                training_args.margin
+            ).mean()
+            
+            val_cost = loss_fn(anchor_embeddings_val, positive_embeddings_val, negative_embeddings_val) + 0.5 * triplet_loss
 
     tqdm.write(f"Validation Loss: {val_cost.item():.4f}")
     with open(training_args.logging_path, "a") as log_file:
@@ -33,6 +40,7 @@ def eval_model(
             "validation_loss": val_cost.item()
         }, log_file)
         log_file.write("\n")
+    return val_cost.item()
 
 def train(
     model : torch.nn.Module,
@@ -42,10 +50,10 @@ def train(
     training_args : ContrastiveTrainingArgs,
 ):
     # loss_fn = torch.nn.TripletMarginLoss(margin=training_args.margin, p=training_args.p)
-    loss_fn = NCELoss(temperature=0.2)
+    loss_fn = NCELoss(temperature=training_args.temperature)
     dataloader_train = DataLoader(dataset_train, batch_size=training_args.train_batch_size, shuffle=True)
     dataloader_validation = DataLoader(dataset_validation, batch_size=training_args.eval_batch_size, shuffle=True)
-    eval_model(dataloader_train, dataloader_validation, model, loss_fn, training_args, 0, 0)
+    best_validation_loss : float = 1
     for epoch in range(training_args.epochs):
         for (step, (anchor_batch, positive_batch, negative_batch)) in tqdm(enumerate(dataloader_train), total=len(dataloader_train)):
             # Forward pass
@@ -54,7 +62,12 @@ def train(
             negative_embeddings = model(negative_batch)
             
             # Compute the loss
-            cost = loss_fn(anchor_embeddings, positive_embeddings, negative_embeddings)
+            triplet_loss = torch.nn.functional.relu(
+                F.pairwise_distance(anchor_embeddings, positive_embeddings, p=training_args.p) -
+                F.pairwise_distance(anchor_embeddings, negative_embeddings, p=training_args.p) +
+                training_args.margin
+            ).mean()
+            cost = loss_fn(anchor_embeddings, positive_embeddings, negative_embeddings) + 0.5 * triplet_loss
             
             # Backward pass and optimization
             optimizer.zero_grad()
@@ -91,16 +104,18 @@ def train(
                     else:
                         with open("./temp.csv", "a") as f:
                             f.write(f"{step},{cos_sim_pos:.4f},{cos_sim_neg:.4f}\n")
-            
-            if step % training_args.save_steps == 0:
-                # Save the model checkpoint
-                torch.save(model.state_dict(), f"{training_args.output_dir}model_epoch_{epoch+1}_step_{step+1}.pth")
                 
             if step % training_args.eval_steps == 0:
                 # Evaluating the model on the validation set
                 tqdm.write("Evaluating on validation set...")
-                eval_model(dataloader_train, dataloader_validation, model, loss_fn, training_args, epoch, step)
+                val_loss = eval_model(dataloader_train, dataloader_validation, model, loss_fn, training_args, epoch, step)
+                if val_loss < best_validation_loss:
+                    best_validation_loss = val_loss
+                    torch.save(model.state_dict(), f"{training_args.output_dir}model_epoch_{epoch+1}_step_{step+1}_{val_loss:.4f}.pth")
+                    
         
         print(f"Epoch {epoch+1}/{training_args.epochs}, Loss: {cost.item():.4f}")
-        eval_model(dataloader_train, dataloader_validation, model, loss_fn, training_args, epoch+1, step+1)
-        torch.save(model.state_dict(), f"{training_args.output_dir}model_epoch_{epoch+1}_step_{step+1}.pth")
+        val_loss = eval_model(dataloader_train, dataloader_validation, model, loss_fn, training_args, epoch, step)
+        if val_loss < best_validation_loss:
+            best_validation_loss = val_loss
+            torch.save(model.state_dict(), f"{training_args.output_dir}model_epoch_{epoch+1}_step_{step+1}_{val_loss:.4f}.pth")

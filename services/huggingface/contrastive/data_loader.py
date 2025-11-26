@@ -9,7 +9,7 @@ from utils.token_manager import get_hf_token
 
 class TripletDataset(Dataset):
     def __init__(self, split : Literal["train", "validation"]):
-        dataframe = pd.DataFrame(load_dataset("avinot/Champion-Similarity-v2", token=get_hf_token("read"), split=split))
+        dataframe = pd.DataFrame(load_dataset("avinot/Champion-Similarity-v5", token=get_hf_token("read"), split=split))
         self.anchor = dataframe["anchor"].to_numpy()
         self.positive = dataframe["positive"].to_numpy()
         self.negative = dataframe["negative"].to_numpy()

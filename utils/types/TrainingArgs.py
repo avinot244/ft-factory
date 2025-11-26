@@ -11,9 +11,9 @@ class ContrastiveTrainingArgs(BaseModel):
     eval_batch_size: int
     learning_rate: float
     logging_steps: int
-    save_steps: int
     eval_steps: int
     weight_decay: float
     epochs: int
     margin: float
     p: int
+    temperature: float
