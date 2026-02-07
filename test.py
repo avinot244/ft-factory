@@ -12,7 +12,7 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 
 model : PredictionHead = PredictionHead(input_dim=2048, output_dim=2048)
-model.load_state_dict(torch.load("output/v11/model_epoch_3_step_1201_0.2539.pth", map_location=torch.device('cpu')))
+model.load_state_dict(torch.load("output/v13/model_epoch_5_step_3001_0.1572.pth", map_location=torch.device('cpu')))
 model = model.eval()
 
 
@@ -26,24 +26,36 @@ with open(path, "r", encoding="utf-8") as f:
         line = line.strip()
         champion_rationales.append(json.loads(line))    
 
-names = []
-rationales = []
-for entry in champion_rationales:
-    names.append(entry["name"])
-    rationales.append(entry["rationale"])
+def get_champion_rationale(champion : str, data : list[dict]):
+    for champion_data in data:
+        if champion == champion_data["name"]:
+            return champion_data["rationale"]
 
-# Compute embeddings (batching would be recommended for large lists)
-embeddings = []
-for t in tqdm(rationales[:1], desc="Embedding rationales"):
-    print(t)
-    with torch.no_grad():
-        emb = model(t)
-    emb = emb.detach().cpu().to(torch.float32).squeeze()
+
+
+anchor_rationale : str = get_champion_rationale("Sion", champion_rationales)
+positive_rationale : str = get_champion_rationale("Ornn", champion_rationales)
+negative_rationale : str = get_champion_rationale("Lux", champion_rationales)
+
+
+anchor_embd : torch.Tensor = model(anchor_rationale)
+positive_embd = model(positive_rationale)
+negative_embd = model(negative_rationale)
+
+print(anchor_rationale)
+print(positive_rationale)
+print(negative_rationale)
+
+sim_anchor_pos = cosine_similarity(anchor_embd.detach().cpu().numpy(), positive_embd.detach().cpu().numpy())
+sim_anchor_neg = cosine_similarity(anchor_embd.detach().cpu().numpy(), negative_embd.detach().cpu().numpy())
+
+print("Similarity betwen a and p :", sim_anchor_pos)
+print("Similarity betwen a and n :", sim_anchor_neg)
+
+
     # ensure 1D numpy vector
     # emb = emb.numpy().reshape(-1)
-    embeddings.append(emb)
 
-print(embeddings[0].shape)
 # if not embeddings:
 #     raise ValueError("No embeddings computed; check champion_rationales contents.")
 

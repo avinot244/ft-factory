@@ -4,17 +4,19 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from utils.token_manager import get_hf_token
 
 class PredictionHead(torch.nn.Module):
-    def __init__(self, input_dim=2048, proj_dim=512, output_dim=2048, dtype=torch.bfloat16):
+    def __init__(self, input_dim=2048, proj_dim=512, output_dim=2048):
         super(PredictionHead, self).__init__()
         if torch.cuda.is_available():
             self.device = torch.device("cuda")
         else:
             self.device = torch.device("cpu")
         
+        self.dtype = torch.bfloat16
+        
         self.backbone = AutoModelForCausalLM.from_pretrained(
             "avinot/LoLlama-3.2-1B-lora-3ep-v3-instruct", 
             token=get_hf_token("read"),
-            torch_dtype=torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
+            torch_dtype=self.dtype
         ).to(self.device)
         
         self.tokenizer = AutoTokenizer.from_pretrained(
@@ -26,13 +28,13 @@ class PredictionHead(torch.nn.Module):
             param.requires_grad = False
         
         self.proj = torch.nn.Sequential(
-            torch.nn.Linear(input_dim, proj_dim, dtype=dtype).to(self.device),
+            torch.nn.Linear(input_dim, proj_dim, dtype=self.dtype).to(self.device),
             torch.nn.ReLU(),
             # torch.nn.Dropout(0.2),
-            torch.nn.Linear(proj_dim, proj_dim, dtype=dtype).to(self.device),
+            torch.nn.Linear(proj_dim, proj_dim, dtype=self.dtype).to(self.device),
             torch.nn.ReLU(),
             # torch.nn.Dropout(0.2),
-            torch.nn.Linear(proj_dim, output_dim, dtype=dtype).to(self.device),
+            torch.nn.Linear(proj_dim, output_dim, dtype=self.dtype).to(self.device),
         )
 
     def forward(self, input_text : list[str]) -> torch.Tensor:
@@ -55,7 +57,7 @@ class PredictionHead(torch.nn.Module):
             mean_k_layers = stacked.mean(dim=0)   # (B, T, D)
 
             attention_mask = inputs["attention_mask"].unsqueeze(-1).to(self.device)
-            masked_mean = (mean_k_layers * attention_mask).sum(dim=1) / attention_mask.sum(dim=1)
+            masked_mean : torch.Tensor = (mean_k_layers * attention_mask).sum(dim=1) / attention_mask.sum(dim=1)
         
         # Linear projection
         projected = self.proj(masked_mean)

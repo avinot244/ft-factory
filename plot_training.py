@@ -5,7 +5,7 @@ import numpy as np
 import csv
 import os
 
-version : str = "v11"
+version : str = "v13"
 log_path : str = f"./logs/training_log_{version}.jsonl"
 out_path : str = f"./output/{version}/training_validation_loss"
 x_interval = 10
