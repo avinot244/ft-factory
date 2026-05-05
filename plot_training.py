@@ -5,9 +5,8 @@ import numpy as np
 import csv
 import os
 
-version : str = "v13"
-log_path : str = f"./logs/training_log_{version}.jsonl"
-out_path : str = f"./output/{version}/training_validation_loss"
+log_path : str = f"./training_synergy_contrastive_log.jsonl"
+out_path : str = f"./"
 x_interval = 10
 
 with open(log_path, "r") as f:
@@ -36,6 +35,7 @@ with open(log_path, "r") as f:
     plt.title("Training and Validation Loss Over Steps")
     plt.xlabel("Steps")
     plt.ylabel("Loss")
+    plt.ylim(-0.8, 2)
     plt.legend()
     plt.savefig(out_path, dpi=200)
 
@@ -46,9 +46,10 @@ with open("temp.csv", "r") as f:
     for i, line in enumerate(reader):
         if i == 0:
             continue
-        step = i * x_interval
-        cos_sim_pos = float(line[1])
-        cos_sim_neg = float(line[2])
+        epoch = float(line[0])
+        step = float(line[1])
+        cos_sim_pos = float(line[2])
+        cos_sim_neg = float(line[3])
         neg_sims.append(cos_sim_neg)
         pos_sims.append(cos_sim_pos)
         
@@ -66,7 +67,7 @@ sns.lineplot(x=[i * x_interval for i in range(len(smoothed_neg))], y=smoothed_ne
 plt.xlabel("Steps")
 plt.ylabel("Cosine Similarity")
 plt.title("Evolution of Positive vs Negative Cosine Similarities")
-plt.ylim(-1.05, 1.05)
+plt.ylim(-0.5, 1.05)
 plt.legend()
 os.makedirs(os.path.dirname(out_path), exist_ok=True)
 plt.savefig(out_path + "_cosine.png", dpi=200)
