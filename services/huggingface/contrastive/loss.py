@@ -42,3 +42,47 @@ class NCELoss(nn.Module):
         loss = -torch.log(sim_pos / denom)
 
         return loss.mean()
+
+class SIGReg(nn.Module):
+    def __init__(self, n_projections: int = 32, lam: float = 0.05):
+        super().__init__()
+        self.n_projections = n_projections
+        self.lam           = lam
+
+    def forward(self, embeddings: torch.Tensor) -> torch.Tensor:
+        """
+        embeddings: (B, D) — raw anchor embeddings before normalisation.
+        Enforces directional isotropy via characteristic function matching
+        on random 1D projections of the L2-normalised embeddings.
+        """
+        B, D = embeddings.shape
+        if B < 4:
+            return embeddings.new_tensor(0.0)
+
+        # Normalise onto unit hypersphere — enforces isotropy of direction,
+        # not magnitude. This decouples SIGReg from the InfoNCE scale signal.
+        emb = F.normalize(embeddings, dim=-1)           # (B, D)
+
+        # Random unit directions sampled fresh each forward pass
+        directions = F.normalize(
+            torch.randn(
+                D,
+                self.n_projections,
+                device=embeddings.device,
+                dtype=emb.dtype,
+            ),
+            dim=0
+        )                                               # (D, M)
+
+        proj = emb @ directions                         # (B, M)
+
+        # Characteristic function matching against N(0,1) target.
+        # For each t, E[cos(t*X)] should equal exp(-t²/2) for X ~ N(0,1).
+        # We match over a grid of t values for robustness.
+        loss = emb.new_tensor(0.0)
+        for t in [0.5, 1.0, 1.5, 2.0]:
+            ecf_real = torch.cos(t * proj).mean(dim=0)  # (M,)
+            target   = torch.exp(emb.new_tensor(-t ** 2 / 2.0))
+            loss = loss + (ecf_real - target).pow(2).mean()
+
+        return self.lam * loss

@@ -15,7 +15,7 @@ def main():
     training_args = ContrastiveTrainingArgs(
         output_dir="output/champion_embedding_v6/",
         logging_path="output/champion_embedding_v6/training_log_v13.jsonl",
-        epochs=6,
+        epochs=10,
         train_batch_size=8,
         eval_batch_size=8,
         learning_rate=5e-5,
@@ -24,7 +24,8 @@ def main():
         weight_decay=1e-2,
         margin=0.5,
         p=2,
-        temperature=0.02
+        temperature=0.02,
+        use_sigreg=True
     )
     
     train(

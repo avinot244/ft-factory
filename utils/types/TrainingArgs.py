@@ -17,3 +17,4 @@ class ContrastiveTrainingArgs(BaseModel):
     margin: float
     p: int
     temperature: float
+    use_sigreg: bool = False

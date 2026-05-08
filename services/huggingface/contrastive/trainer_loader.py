@@ -39,7 +39,7 @@ import torch
 import torch.nn.functional as F
 from tqdm import tqdm
 
-from services.huggingface.contrastive.loss import NCELoss
+from services.huggingface.contrastive.loss import NCELoss, SIGReg
 from utils.types.TrainingArgs import ContrastiveTrainingArgs
 
 
@@ -369,14 +369,16 @@ def plot_from_jsonl(jsonl_path: str, output_dir: str) -> None:
 def _eval_pass(
     dataloader_val: torch.utils.data.DataLoader,
     model: torch.nn.Module,
-    loss_fn: NCELoss,
+    nce_loss: NCELoss,
     training_args: ContrastiveTrainingArgs,
+    sigreg_loss: SIGReg = None,
 ) -> tuple[float, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
     """
     Full validation pass.
     Returns (mean_loss, last_anc, last_pos, last_neg_packed, last_neg_mask).
     The last-batch embeddings are used as a representative sample for logging.
     """
+    assert training_args.use_sigreg and sigreg_loss is not None
     total_loss = 0.0
     n_batches  = 0
     last_anc = last_pos = last_neg = last_mask = None
@@ -400,8 +402,10 @@ def _eval_pass(
                                     p=training_args.p) +
                 training_args.margin
             ).mean()
-
-            loss = loss_fn(anc_emb, pos_emb, neg_emb) + 0.5 * triplet
+            if training_args.use_sigreg:
+                loss = nce_loss(anc_emb, pos_emb, neg_emb) + 0.5 * triplet + 0.5 * (sigreg_loss(anc_emb) + sigreg_loss(pos_emb))
+            else:
+                loss = nce_loss(anc_emb, pos_emb, neg_emb) + 0.5 * triplet
 
         total_loss += loss.item()
         n_batches  += 1
@@ -424,7 +428,8 @@ def train(
 ) -> None:
     from services.huggingface.contrastive.data_loader import build_dataloader
 
-    loss_fn = NCELoss(temperature=training_args.temperature)
+    nce_loss = NCELoss(temperature=training_args.temperature)
+    sigreg_loss = SIGReg(n_projections=32, lam=0.05)
 
     dataloader_train = build_dataloader(
         dataset_train, batch_size=training_args.train_batch_size, shuffle=True
@@ -465,8 +470,10 @@ def train(
                                     p=training_args.p) +
                 training_args.margin
             ).mean()
-
-            cost = loss_fn(anc_emb, pos_emb, neg_emb) + 0.5 * triplet
+            if training_args.use_sigreg:
+                cost = nce_loss(anc_emb, pos_emb, neg_emb) + 0.5 * triplet + 1/2 * (sigreg_loss(anc_emb) + sigreg_loss(pos_emb))
+            else:
+                cost = nce_loss(anc_emb, pos_emb, neg_emb) + 0.5 * triplet
 
             # -- Backward ---------------------------------------------------
             optimizer.zero_grad()
@@ -490,9 +497,14 @@ def train(
             if step % training_args.eval_steps == 0:
                 model.eval()
                 tqdm.write("  Evaluating on validation set...")
-                val_loss, v_anc, v_pos, v_neg, v_mask = _eval_pass(
-                    dataloader_val, model, loss_fn, training_args
-                )
+                if training_args.use_sigreg:
+                    val_loss, v_anc, v_pos, v_neg, v_mask = _eval_pass(
+                        dataloader_val, model, nce_loss, training_args, sigreg_loss
+                    )
+                else:
+                    val_loss, v_anc, v_pos, v_neg, v_mask = _eval_pass(
+                        dataloader_val, model, nce_loss, training_args
+                    )
                 m = logger.log_val(
                     global_step, epoch, val_loss,
                     v_anc, v_pos, v_neg, v_mask,
@@ -516,9 +528,14 @@ def train(
 
         # -- End-of-epoch validation ----------------------------------------
         model.eval()
-        val_loss, v_anc, v_pos, v_neg, v_mask = _eval_pass(
-            dataloader_val, model, loss_fn, training_args
-        )
+        if training_args.use_sigreg:
+            val_loss, v_anc, v_pos, v_neg, v_mask = _eval_pass(
+                dataloader_val, model, nce_loss, training_args, sigreg_loss
+            )
+        else:
+            val_loss, v_anc, v_pos, v_neg, v_mask = _eval_pass(
+                dataloader_val, model, nce_loss, training_args
+            )
         global_step = (epoch + 1) * steps_per_epoch
         m = logger.log_val(global_step, epoch, val_loss, v_anc, v_pos, v_neg, v_mask)
 
