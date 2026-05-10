@@ -40,6 +40,7 @@ import torch.nn.functional as F
 from tqdm import tqdm
 
 from services.huggingface.contrastive.loss import NCELoss, SIGReg
+from services.huggingface.contrastive.model_loader import PredictionHead
 from utils.types.TrainingArgs import ContrastiveTrainingArgs
 
 
@@ -420,8 +421,7 @@ def _eval_pass(
 
 
 def train(
-    model: torch.nn.Module,
-    optimizer: torch.optim.Optimizer,
+    model: PredictionHead,
     dataset_train: torch.utils.data.Dataset,
     dataset_validation: torch.utils.data.Dataset,
     training_args: ContrastiveTrainingArgs,
@@ -436,6 +436,24 @@ def train(
     )
     dataloader_val = build_dataloader(
         dataset_validation, batch_size=training_args.eval_batch_size, shuffle=False
+    )
+    
+    model_layers = list(model.backbone.model.layers)
+    
+    for layer in model_layers[:-2]:
+        for param in layer.parameters():
+            param.requires_grad = False
+            
+    for layer in model_layers[-2:]:
+        for param in layer.parameters():
+            param.requires_grad = True
+            
+    optimizer = torch.optim.AdamW([
+            {"params": model.head.parameters(), "lr": training_args.learning_rate},
+            {"params": model_layers[-2].parameters(), "lr": 1e-5},
+            {"params": model_layers[-1].parameters(), "lr": 1e-5},
+        ],
+        weight_decay=training_args.weight_decay
     )
 
     logger          = MetricLogger(training_args.logging_path)

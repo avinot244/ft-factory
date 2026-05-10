@@ -30,7 +30,6 @@ def main():
     
     train(
         model,
-        optimizer=torch.optim.Adam(model.parameters(), lr=training_args.learning_rate, weight_decay=training_args.weight_decay),
         dataset_train=dataset_train,
         dataset_validation=dataset_validation,
         training_args=training_args

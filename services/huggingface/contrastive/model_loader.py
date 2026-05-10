@@ -26,7 +26,7 @@ class PredictionHead(torch.nn.Module):
         for param in self.backbone.parameters():
             param.requires_grad = False
 
-        self.proj = torch.nn.Sequential(
+        self.head = torch.nn.Sequential(
             torch.nn.Linear(input_dim, proj_dim, dtype=self.dtype).to(self.device),
             torch.nn.ReLU(),
             torch.nn.Dropout(0.2),
@@ -60,7 +60,7 @@ class PredictionHead(torch.nn.Module):
             mask        = inputs["attention_mask"].unsqueeze(-1)  # (N, T, 1)
             masked_mean = (mean_hs * mask).sum(dim=1) / mask.sum(dim=1)  # (N, D)
 
-        projected  = self.proj(masked_mean)
+        projected  = self.head(masked_mean)
         normalised = F.normalize(projected + masked_mean, p=2, dim=1)
         return normalised
 
