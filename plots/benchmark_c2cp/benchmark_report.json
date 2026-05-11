@@ -1,0 +1,141 @@
+{
+  "global_geometry": {
+    "effective_rank": 74.91719055175781,
+    "mean_pairwise_cos": 0.9107252359390259,
+    "per_dim_std": 0.006447316147387028,
+    "dim_50pct_variance": 12,
+    "dim_80pct_variance": 53,
+    "dim_95pct_variance": 118,
+    "n_dead_dims": 2020
+  },
+  "expected_pairs": {
+    "mean_close_sim": 0.9228668630123138,
+    "mean_far_sim": 0.9262511233488718,
+    "gap_close_minus_far": -0.0033842603365580315,
+    "close_precision": 0.4,
+    "n_correct_close_pairs": 4,
+    "n_total_close_pairs": 10,
+    "missing_pairs": []
+  },
+  "nn_recall": {
+    "overall_precision_at_k": 0.03484848484848485,
+    "k": 5,
+    "per_group": {
+      "single_commit_teamfight": {
+        "mean_precision_at_k": 0.0,
+        "members_found": [
+          "Malphite",
+          "Amumu",
+          "Galio",
+          "Zac",
+          "Orianna"
+        ],
+        "k": 5
+      },
+      "invisibility_burst_escape": {
+        "mean_precision_at_k": 0.05,
+        "members_found": [
+          "Zed",
+          "Akali",
+          "Talon",
+          "Kha'Zix"
+        ],
+        "k": 5
+      },
+      "stationary_hyperscaler": {
+        "mean_precision_at_k": 0.13333333333333333,
+        "members_found": [
+          "Jinx",
+          "Kog'Maw",
+          "Twitch"
+        ],
+        "k": 5
+      },
+      "zone_placement_burst_confirm": {
+        "mean_precision_at_k": 0.0,
+        "members_found": [
+          "Veigar",
+          "Lissandra",
+          "Annie"
+        ],
+        "k": 5
+      },
+      "hook_single_target_lockdown": {
+        "mean_precision_at_k": 0.06666666666666667,
+        "members_found": [
+          "Thresh",
+          "Blitzcrank",
+          "Nautilus"
+        ],
+        "k": 5
+      },
+      "ally_synchronisation": {
+        "mean_precision_at_k": 0.06666666666666667,
+        "members_found": [
+          "Seraphine",
+          "Taric",
+          "Lulu"
+        ],
+        "k": 5
+      },
+      "stack_accumulation_execute": {
+        "mean_precision_at_k": 0.0,
+        "members_found": [
+          "Nasus",
+          "Veigar",
+          "Sion"
+        ],
+        "k": 5
+      },
+      "mark_and_execute": {
+        "mean_precision_at_k": 0.06666666666666667,
+        "members_found": [
+          "Rek'Sai",
+          "Zed",
+          "Rengar"
+        ],
+        "k": 5
+      },
+      "terrain_control": {
+        "mean_precision_at_k": 0.0,
+        "members_found": [
+          "Anivia",
+          "Trundle",
+          "Jarvan IV"
+        ],
+        "k": 5
+      },
+      "shadow_positional_algebra": {
+        "mean_precision_at_k": 0.0,
+        "members_found": [
+          "Zed",
+          "LeBlanc",
+          "Ekko"
+        ],
+        "k": 5
+      },
+      "setup_confirm_loop": {
+        "mean_precision_at_k": 0.0,
+        "members_found": [
+          "Nidalee",
+          "Jayce",
+          "Elise"
+        ],
+        "k": 5
+      }
+    },
+    "random_baseline": 0.2
+  },
+  "heatmap": {
+    "mean_intra_group_cos": 0.9199984669685364,
+    "mean_inter_group_cos": 0.9159001708030701,
+    "intra_minus_inter_gap": 0.004098296165466309,
+    "n_curated_champions": 33
+  },
+  "role_vs_mechanic": {
+    "silhouette_role_clustering": 0.003969260662894465,
+    "silhouette_mechanic_clustering": 0.00806378798394202,
+    "mechanic_advantage": 0.004094527321047555,
+    "interpretation": "mechanic > role \u2192 model captures cross-role similarity \u2713"
+  }
+}
