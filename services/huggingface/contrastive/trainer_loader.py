@@ -436,22 +436,10 @@ def train(
     )
     dataloader_val = build_dataloader(
         dataset_validation, batch_size=training_args.eval_batch_size, shuffle=False
-    )
-    
-    model_layers = list(model.backbone.model.layers)
-    
-    for layer in model_layers[:-2]:
-        for param in layer.parameters():
-            param.requires_grad = False
-            
-    for layer in model_layers[-2:]:
-        for param in layer.parameters():
-            param.requires_grad = True
+    )    
             
     optimizer = torch.optim.AdamW([
             {"params": model.head.parameters(), "lr": training_args.learning_rate},
-            {"params": model_layers[-2].parameters(), "lr": 1e-5},
-            {"params": model_layers[-1].parameters(), "lr": 1e-5},
         ],
         weight_decay=training_args.weight_decay
     )
