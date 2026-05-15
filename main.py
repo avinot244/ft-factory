@@ -1,38 +1,53 @@
 import torch
-from services.huggingface.contrastive.model_loader import PredictionHead
-from services.huggingface.contrastive.data_loader import TripletDataset
-from services.huggingface.contrastive.trainer_loader import train
-from utils.types.TrainingArgs import ContrastiveTrainingArgs
+from services.sentence_transformer.contrastive.model_loader import PredictionHead
+from services.sentence_transformer.contrastive.data_loader import ChampionSimilarityDataset
+from services.sentence_transformer.contrastive.trainer_loader import train, ContrastiveTrainingArgs
 import os
 os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
 
 def main():
-    model = PredictionHead(input_dim=2048, output_dim=2048)
-
-    dataset_train = TripletDataset(split="train")
-    dataset_validation = TripletDataset(split="validation")
+    model = PredictionHead()
     
     training_args = ContrastiveTrainingArgs(
-        output_dir="output/champion_embedding_v6/",
-        logging_path="output/champion_embedding_v6/training_log_v13.jsonl",
-        epochs=10,
-        train_batch_size=8,
-        eval_batch_size=8,
-        learning_rate=5e-5,
-        logging_steps=10,
-        eval_steps=200,
-        weight_decay=1e-2,
-        margin=0.5,
-        p=2,
-        temperature=0.02,
-        use_sigreg=True
+        # Paths
+        output_dir = "output/c2cp_bge",
+        logging_path = "logs/c2cp_bge/c2cp_bge_metrics.jsonl",
+
+        # Training hyper-parameters
+        epochs = 10,
+        train_batch_size = 8,
+        eval_batch_size = 8,
+        learning_rate = 3e-4,
+        weight_decay = 1e-2,
+
+        # Loss hyper-parameters
+        temperature = 0.07,   # NCE temperature
+        margin = 0.5,    # triplet margin
+        p = 2,      # Lp distance for triplet
+        use_sigreg = True,   # add SIGReg uniformity term
+
+        # Logging / checkpointing
+        logging_steps = 20,   # train log frequency (steps)
+        eval_steps = 100,  # validation frequency (steps)
+
+        # Model architecture
+        output_dim = 256,
+        hidden_dim = 512,
+        bottleneck_dim = 256,
+        dropout = 0.1,
+        freeze_backbone = True,
+
+        # HuggingFace dataset cache
+        hf_cache_dir = None,
+
+        # Device
+        device = "cuda"
     )
-    
     train(
-        model,
-        dataset_train=dataset_train,
-        dataset_validation=dataset_validation,
-        training_args=training_args
+        model=model,
+        dataset_train=ChampionSimilarityDataset(split="train"),
+        dataset_validation=ChampionSimilarityDataset(split="validation"),
+        args=training_args,
     )
     
 
