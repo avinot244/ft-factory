@@ -1,22 +1,20 @@
 import torch
-from services.sentence_transformer.contrastive.model_loader import PredictionHead
 from services.sentence_transformer.contrastive.data_loader import ChampionSimilarityDataset
-from services.sentence_transformer.contrastive.trainer_loader import train, ContrastiveTrainingArgs
+from services.sentence_transformer.contrastive.trainer_loader import ContrastiveTrainingArgs, run
 import os
 os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
 
 def main():
-    model = PredictionHead()
-    
     training_args = ContrastiveTrainingArgs(
         # Paths
         output_dir = "output/c2cp_bge",
         logging_path = "logs/c2cp_bge/c2cp_bge_metrics.jsonl",
+        cache_path="cache/backbone_cache.pt",
 
         # Training hyper-parameters
         epochs = 10,
-        train_batch_size = 8,
-        eval_batch_size = 8,
+        train_batch_size = 64,
+        eval_batch_size = 64,
         learning_rate = 3e-4,
         weight_decay = 1e-2,
 
@@ -35,7 +33,6 @@ def main():
         hidden_dim = 512,
         bottleneck_dim = 256,
         dropout = 0.1,
-        freeze_backbone = True,
 
         # HuggingFace dataset cache
         hf_cache_dir = None,
@@ -43,13 +40,15 @@ def main():
         # Device
         device = "cuda"
     )
-    train(
-        model=model,
-        dataset_train=ChampionSimilarityDataset(split="train"),
-        dataset_validation=ChampionSimilarityDataset(split="validation"),
-        args=training_args,
-    )
     
+    if not os.path.exists("cache/backbone_cache.pt"):
+        ChampionSimilarityDataset.build_cache(
+            save_path="cache/backbone_cache.pt",
+            device=training_args.device,
+            batch_size=4
+        )
+    
+    run(training_args)
 
 if __name__ == "__main__":
     main()
