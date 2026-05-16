@@ -59,7 +59,9 @@ class ContrastiveTrainingArgs:
     output_dir:    str           = "output/c2cp_bge"
     logging_path:  str           = "logs/c2cp_bge/c2cp_bge_metrics.jsonl"
     # Set to a .pt path for CACHED mode; None for ONLINE mode
-    cache_path:    Optional[str] = "cache/backbone_cache.pt"
+    cache_path:       Optional[str] = "cache/backbone_cache.pt"
+    # Optional: warm-start from a previous checkpoint (e.g. trained on dataset A)
+    checkpoint_path:  Optional[str] = None
     # Used only in ONLINE mode (cache_path=None)
     backbone_name: Optional[str] = "BAAI/bge-m3"
 
@@ -85,6 +87,11 @@ class ContrastiveTrainingArgs:
     hidden_dim:     int   = 512
     bottleneck_dim: int   = 256
     dropout:        float = 0.1
+
+    # Dataset — set to the relevant HuggingFace repo ID
+    # (A) role/class-constrained : "avinot/Champion-Similarity-v5"
+    # (B) mechanics/playstyle    : "avinot/Champion-Similarity-v6"
+    dataset_id:   str           = "avinot/Champion-Similarity-v6"
 
     # HuggingFace dataset cache
     hf_cache_dir: Optional[str] = None
@@ -549,30 +556,59 @@ def run(args: ContrastiveTrainingArgs) -> None:
     """
     Convenience wrapper: load datasets, build model, call train().
 
-    CACHED mode (recommended)
+    Dataset (A) — CACHED mode
     -------------------------
         run(ContrastiveTrainingArgs(
-            cache_path    = "cache/backbone_cache.pt",
+            dataset_id    = "avinot/Champion-Similarity-v5",
+            cache_path    = "cache/v5_backbone_cache.pt",
             train_batch_size = 64,
         ))
 
-    ONLINE mode (no cache)
-    ----------------------
+    Dataset (B) — CACHED mode
+    -------------------------
         run(ContrastiveTrainingArgs(
+            dataset_id    = "avinot/Champion-Similarity-v6",
+            cache_path    = "cache/v6_backbone_cache.pt",
+            train_batch_size = 64,
+        ))
+
+    ONLINE mode (no cache, any dataset)
+    ------------------------------------
+        run(ContrastiveTrainingArgs(
+            dataset_id    = "avinot/Champion-Similarity-v5",
             cache_path    = None,
             backbone_name = "BAAI/bge-m3",
-            train_batch_size = 16,   # lower — backbone runs every step
+            train_batch_size = 16,
         ))
+
+    Sequential curriculum  (A) → (B)
+    ----------------------------------
+    Train two runs back-to-back, passing the first checkpoint to the second:
+        args_A = ContrastiveTrainingArgs(
+            dataset_id      = "avinot/Champion-Similarity-v5",
+            cache_path      = "cache/v5_backbone_cache.pt",
+            output_dir      = "output/c2cp_A",
+        )
+        run(args_A)
+        args_B = ContrastiveTrainingArgs(
+            dataset_id      = "avinot/Champion-Similarity-v6",
+            cache_path      = "cache/v6_backbone_cache.pt",
+            output_dir      = "output/c2cp_A_then_B",
+            checkpoint_path = "output/c2cp_A/best_....pth",
+        )
+        run(args_B)
     """
     mode_label = "CACHED" if args.cached else f"ONLINE ({args.backbone_name})"
-    print(f"[run] Mode: {mode_label}")
+    print(f"[run] Dataset: {args.dataset_id}  |  Mode: {mode_label}")
 
     dataset_train = ChampionSimilarityDataset(
+        dataset_id = args.dataset_id,
         split      = "train",
         cache_dir  = args.hf_cache_dir,
-        cache_path = args.cache_path,          # None → TEXT mode in DataLoader
+        cache_path = args.cache_path,
     )
     dataset_val = ChampionSimilarityDataset(
+        dataset_id = args.dataset_id,
         split      = "validation",
         cache_dir  = args.hf_cache_dir,
         cache_path = args.cache_path,
@@ -582,12 +618,13 @@ def run(args: ContrastiveTrainingArgs) -> None:
     # backbone_name=None → CACHED mode (no ST loaded)
     # backbone_name="BAAI/bge-m3" → ONLINE mode (ST loaded and frozen)
     model = load_model(
-        output_dim     = args.output_dim,
-        hidden_dim     = args.hidden_dim,
-        bottleneck_dim = args.bottleneck_dim,
-        dropout        = args.dropout,
-        backbone_name  = None if args.cached else args.backbone_name,
-        device         = args.device,
+        output_dim      = args.output_dim,
+        hidden_dim      = args.hidden_dim,
+        bottleneck_dim  = args.bottleneck_dim,
+        dropout         = args.dropout,
+        backbone_name   = None if args.cached else args.backbone_name,
+        checkpoint_path = args.checkpoint_path,
+        device          = args.device,
     ).to(args.device)
     model.train()
 

@@ -7,12 +7,13 @@ os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
 def main():
     training_args = ContrastiveTrainingArgs(
         # Paths
-        output_dir = "output/c2cp_bge",
-        logging_path = "logs/c2cp_bge/c2cp_bge_metrics.jsonl",
-        cache_path="cache/backbone_cache.pt",
+        output_dir = "output/c2cp_bge_v6",
+        logging_path = "logs/c2cp_bge_v6/c2cp_bge_metrics.jsonl",
+        cache_path="cache/backbone_cache_v6.pt",
+        checkpoint_path="output/c2cp_bge_v5/best_epoch1_step400_0.0211.pth",
 
         # Training hyper-parameters
-        epochs = 10,
+        epochs = 40,
         train_batch_size = 64,
         eval_batch_size = 64,
         learning_rate = 3e-4,
@@ -35,15 +36,17 @@ def main():
         dropout = 0.1,
 
         # HuggingFace dataset cache
+        dataset_id="avinot/Champion-Similarity-v6",
         hf_cache_dir = None,
 
         # Device
         device = "cuda"
     )
     
-    if not os.path.exists("cache/backbone_cache.pt"):
+    if not os.path.exists("cache/backbone_cache_v6.pt"):
         ChampionSimilarityDataset.build_cache(
-            save_path="cache/backbone_cache.pt",
+            save_path="cache/backbone_cache_v6.pt",
+            dataset_id="avinot/Champion-Similarity-v6",
             device=training_args.device,
             batch_size=4
         )
