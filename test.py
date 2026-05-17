@@ -1,11 +1,13 @@
-from sentence_transformers import SentenceTransformer
-import torch
-from services.huggingface.contrastive.model_loader import PredictionHead
+from services.sentence_transformer.contrastive.model_loader import load_model
 import torch.nn.functional as F
 
-weights_path = "./output/champion_embedding_v6/best_epoch8_step7271_0.1956.pth"
-model = PredictionHead()
-model.load_state_dict(torch.load(weights_path))
+weights_path = "./output/c2cp_bge_v5/best_epoch1_step400_0.0211.pth"
+
+model = load_model(
+    backbone_name   = "BAAI/bge-m3",  # ONLINE mode — loads and freezes bge-m3
+    checkpoint_path = weights_path,    # loads head weights only
+    device          = "cuda",           # or "cuda" if available
+)
 model.eval()
 
 rationale_caitlyn = (
@@ -19,7 +21,6 @@ rationale_caitlyn = (
     "confirming the enemy has no escape tool, which wastes the only "
     "displacement in the kit."
 )
-
 rationale_jinx = (
     "The repeating loop is rocket poke at extended range followed by "
     "minigun cleanup after a takedown triggers the passive reset. "
@@ -30,7 +31,6 @@ rationale_jinx = (
     "Jinx's specific failure is switching to minigun before the fight is "
     "won, sacrificing the range that prevents the fed threat from closing."
 )
-
 rationale_lux = (
     "The execution pattern is zone establishment via Light Binding placement, "
     "waiting for the enemy to step into the snare, then confirming with "
@@ -43,19 +43,8 @@ rationale_lux = (
     "the entire sequence."
 )
 
-rationales = {
-    "Caitlyn_v6": rationale_caitlyn,
-    "Jinx_v6":    rationale_jinx,
-    "Lux_v6":     rationale_lux,
-}
-
-model = SentenceTransformer("intfloat/e5-base-v2")
-
-embs = model.encode([
-    rationale_caitlyn,
-    rationale_jinx,
-    rationale_lux,
-], convert_to_tensor=True, normalize_embeddings=True)
+# model.encode() is the ONLINE-mode entry point: list[str] → (B, output_dim) tensor
+embs = model.encode([rationale_caitlyn, rationale_jinx, rationale_lux])
 
 pairs = [("Caitlyn", "Jinx", 0, 1), ("Caitlyn", "Lux", 0, 2), ("Jinx", "Lux", 1, 2)]
 for n1, n2, i, j in pairs:

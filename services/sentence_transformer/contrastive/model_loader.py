@@ -311,7 +311,14 @@ def load_model(
 
     if checkpoint_path is not None:
         state = torch.load(checkpoint_path, map_location=device, weights_only=True)
-        model.load_state_dict(state)
-        print(f"[model_loader] Restored checkpoint: {checkpoint_path}")
+        # Checkpoints only contain head weights (backbone is frozen and never saved).
+        # Strip an optional 'head.' prefix to support both bare and prefixed state dicts.
+        head_state = {
+            (k[len('head.'):] if k.startswith('head.') else k): v
+            for k, v in state.items()
+            if k.startswith('head.') or not any(k.startswith(p) for p in ('backbone.',))
+        }
+        model.head.load_state_dict(head_state)
+        print(f"[model_loader] Restored head weights from: {checkpoint_path}")
 
     return model.to(device).eval()
